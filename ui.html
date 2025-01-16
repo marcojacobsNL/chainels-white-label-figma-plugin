@@ -3,84 +3,90 @@
   <head>
     <style>
       body {
-        font: 12px sans-serif;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+        margin: 0;
         padding: 20px;
       }
       input {
         width: 100%;
-        margin-bottom: 10px;
+        padding: 8px;
+        margin-bottom: 12px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
       }
       button {
-        width: 100%;
-        padding: 8px;
-        margin-bottom: 8px;
-        background: #18a0fb;
+        background: #ff0266;
         color: white;
         border: none;
+        padding: 8px 16px;
         border-radius: 4px;
         cursor: pointer;
+        width: 100%;
+        margin-bottom: 8px;
       }
       button:disabled {
         background: #ccc;
+        cursor: not-allowed;
       }
-      .message {
-        margin-top: 10px;
-        color: #333;
+      button.secondary {
+        background: #fff;
+        color: #ff0266;
+        border: 1px solid #ff0266;
       }
       .error {
-        color: #d42f2f;
+        color: #f00;
+        margin-top: 8px;
       }
-      .download-section {
+      .success {
+        color: #0a0;
+        margin-top: 8px;
+      }
+      #download-section {
         display: none;
-        margin-top: 16px;
-      }
-      .download-section.visible {
-        display: block;
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid #eee;
       }
     </style>
   </head>
   <body>
-    <div id="app">
+    <div id="form-section">
       <input
         type="text"
         id="whiteLabelName"
-        placeholder="Enter white label name (e.g. ondernemendAssen)"
+        placeholder="Enter white label name (e.g., ChainelsWhiteLabel)"
       />
-      <button id="generate">Generate Theme Files</button>
-      <div id="message" class="message"></div>
-      <div id="downloads" class="download-section">
-        <button id="downloadTs" class="download-button">
-          Download TypeScript
-        </button>
-        <button id="downloadScss" class="download-button">Download SCSS</button>
-      </div>
+      <button id="generate">Generate Theme</button>
     </div>
+
+    <div id="download-section">
+      <h3>Generated Files</h3>
+      <button id="download-ts" class="secondary">Download TypeScript</button>
+      <button id="download-scss" class="secondary">Download SCSS</button>
+    </div>
+
+    <div id="message"></div>
 
     <script>
       let generatedFiles = null;
 
-      function downloadFile(content, filename) {
-        const blob = new Blob([content], { type: "text/plain" });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = filename;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-      }
-
       document.getElementById("generate").onclick = () => {
-        const whiteLabelName = document.getElementById("whiteLabelName").value;
+        const whiteLabelName = document
+          .getElementById("whiteLabelName")
+          .value.trim();
 
         if (!whiteLabelName) {
-          document.getElementById("message").innerHTML =
-            '<span class="error">Please enter a white label name</span>';
+          showMessage("Please enter a white label name", "error");
           return;
         }
 
-        document.getElementById("downloads").classList.remove("visible");
+        // Reset UI state
+        document.getElementById("download-section").style.display = "none";
+        document.getElementById("generate").disabled = true;
+        showMessage("Generating theme...", "success");
+
         parent.postMessage(
           {
             pluginMessage: {
@@ -92,31 +98,54 @@
         );
       };
 
-      document.getElementById("downloadTs").onclick = () => {
-        if (!generatedFiles) return;
-        const whiteLabelName = document.getElementById("whiteLabelName").value;
-        downloadFile(generatedFiles.typescript, `${whiteLabelName}.theme.ts`);
+      document.getElementById("download-ts").onclick = () => {
+        if (!generatedFiles?.typescript) return;
+        downloadFile(
+          `${document.getElementById("whiteLabelName").value}.theme.ts`,
+          generatedFiles.typescript
+        );
       };
 
-      document.getElementById("downloadScss").onclick = () => {
-        if (!generatedFiles) return;
-        const whiteLabelName = document.getElementById("whiteLabelName").value;
-        downloadFile(generatedFiles.scss, `${whiteLabelName}.theme.scss`);
+      document.getElementById("download-scss").onclick = () => {
+        if (!generatedFiles?.scss) return;
+        downloadFile(
+          `${document.getElementById("whiteLabelName").value}.theme.scss`,
+          generatedFiles.scss
+        );
       };
+
+      function downloadFile(filename, content) {
+        const element = document.createElement("a");
+        element.setAttribute(
+          "href",
+          "data:text/plain;charset=utf-8," + encodeURIComponent(content)
+        );
+        element.setAttribute("download", filename);
+        element.style.display = "none";
+        document.body.appendChild(element);
+        element.click();
+        document.body.removeChild(element);
+      }
+
+      function showMessage(message, type) {
+        const messageEl = document.getElementById("message");
+        messageEl.textContent = message;
+        messageEl.className = type;
+      }
 
       onmessage = (event) => {
-        const message = event.data.pluginMessage;
-        const messageEl = document.getElementById("message");
+        const msg = event.data.pluginMessage;
+        document.getElementById("generate").disabled = false;
 
-        if (message.type === "generation-complete") {
-          messageEl.innerHTML = "Theme files generated successfully!";
-          messageEl.className = "message";
-          generatedFiles = message.files;
-          document.getElementById("downloads").classList.add("visible");
-        } else if (message.type === "generation-error") {
-          messageEl.innerHTML = message.message;
-          messageEl.className = "message error";
-          document.getElementById("downloads").classList.remove("visible");
+        if (msg.type === "error") {
+          showMessage(msg.message, "error");
+          return;
+        }
+
+        if (msg.type === "theme-generated") {
+          generatedFiles = msg.data;
+          document.getElementById("download-section").style.display = "block";
+          showMessage("Theme generated successfully!", "success");
         }
       };
     </script>
