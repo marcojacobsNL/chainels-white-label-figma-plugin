@@ -1,0 +1,24 @@
+{
+  "name": "white-label-theme-generator",
+  "version": "1.0.0",
+  "description": "Figma plugin to generate white label themes",
+  "main": "dist/plugin/index.js",
+  "scripts": {
+    "build": "npm run build:ts && npm run build:bundle",
+    "build:ts": "tsc -p tsconfig.json",
+    "build:bundle": "esbuild dist/plugin/index.js --bundle --outfile=dist/plugin/bundle.js --platform=browser --format=iife && mv dist/plugin/bundle.js dist/plugin/index.js",
+    "watch": "tsc -p tsconfig.json -w",
+    "dev": "npm run watch"
+  },
+  "dependencies": {
+    "@emotion/react": "^11.11.3",
+    "hex-color-to-color-name": "^1.0.2"
+  },
+  "devDependencies": {
+    "@figma/plugin-typings": "^1.107.0-beta.1",
+    "@types/node": "^20.11.5",
+    "@types/react": "^18.2.48",
+    "esbuild": "^0.19.11",
+    "typescript": "^4.5.5"
+  }
+}

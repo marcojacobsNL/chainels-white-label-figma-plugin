@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      body {
+        font: 12px sans-serif;
+        padding: 20px;
+      }
+      input {
+        width: 100%;
+        margin-bottom: 10px;
+      }
+      button {
+        width: 100%;
+        padding: 8px;
+        margin-bottom: 8px;
+        background: #18a0fb;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      button:disabled {
+        background: #ccc;
+      }
+      .message {
+        margin-top: 10px;
+        color: #333;
+      }
+      .error {
+        color: #d42f2f;
+      }
+      .download-section {
+        display: none;
+        margin-top: 16px;
+      }
+      .download-section.visible {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <input
+        type="text"
+        id="whiteLabelName"
+        placeholder="Enter white label name (e.g. ondernemendAssen)"
+      />
+      <button id="generate">Generate Theme Files</button>
+      <div id="message" class="message"></div>
+      <div id="downloads" class="download-section">
+        <button id="downloadTs" class="download-button">
+          Download TypeScript
+        </button>
+        <button id="downloadScss" class="download-button">Download SCSS</button>
+      </div>
+    </div>
+
+    <script>
+      let generatedFiles = null;
+
+      function downloadFile(content, filename) {
+        const blob = new Blob([content], { type: "text/plain" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      }
+
+      document.getElementById("generate").onclick = () => {
+        const whiteLabelName = document.getElementById("whiteLabelName").value;
+
+        if (!whiteLabelName) {
+          document.getElementById("message").innerHTML =
+            '<span class="error">Please enter a white label name</span>';
+          return;
+        }
+
+        document.getElementById("downloads").classList.remove("visible");
+        parent.postMessage(
+          {
+            pluginMessage: {
+              type: "generate-theme",
+              whiteLabelName,
+            },
+          },
+          "*"
+        );
+      };
+
+      document.getElementById("downloadTs").onclick = () => {
+        if (!generatedFiles) return;
+        const whiteLabelName = document.getElementById("whiteLabelName").value;
+        downloadFile(generatedFiles.typescript, `${whiteLabelName}.theme.ts`);
+      };
+
+      document.getElementById("downloadScss").onclick = () => {
+        if (!generatedFiles) return;
+        const whiteLabelName = document.getElementById("whiteLabelName").value;
+        downloadFile(generatedFiles.scss, `${whiteLabelName}.theme.scss`);
+      };
+
+      onmessage = (event) => {
+        const message = event.data.pluginMessage;
+        const messageEl = document.getElementById("message");
+
+        if (message.type === "generation-complete") {
+          messageEl.innerHTML = "Theme files generated successfully!";
+          messageEl.className = "message";
+          generatedFiles = message.files;
+          document.getElementById("downloads").classList.add("visible");
+        } else if (message.type === "generation-error") {
+          messageEl.innerHTML = message.message;
+          messageEl.className = "message error";
+          document.getElementById("downloads").classList.remove("visible");
+        }
+      };
+    </script>
+  </body>
+</html>

@@ -1,0 +1,11 @@
+{
+  "name": "White Label Theme Generator",
+  "id": "your.plugin.id",
+  "api": "1.0.0",
+  "main": "dist/plugin/index.js",
+  "ui": "ui.html",
+  "editorType": ["figma"],
+  "networkAccess": {
+    "allowedDomains": ["none"]
+  }
+}
