@@ -3,8 +3,8 @@
   <head>
     <style>
       body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-          sans-serif;
+        font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, sans-serif;
         margin: 0;
         padding: 20px;
       }
@@ -35,6 +35,10 @@
         color: #ff0266;
         border: 1px solid #ff0266;
       }
+      .error,
+      .success {
+        font-size: 12px;
+      }
       .error {
         color: #f00;
         margin-top: 8px;
@@ -58,7 +62,7 @@
         id="whiteLabelName"
         placeholder="Enter white label name (e.g., ChainelsWhiteLabel)"
       />
-      <button id="generate">Generate Theme</button>
+      <button id="generate">Generate Theme Files</button>
     </div>
 
     <div id="download-section">
